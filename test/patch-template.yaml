@@ -1,0 +1,43 @@
+machine:
+  kubelet:
+    nodeIP:
+      validSubnets:
+        - 192.168.123.0/24
+    extraConfig:
+      maxPods: 512
+  kernel:
+    modules:
+      - name: openvswitch
+      - name: drbd
+        parameters:
+          - usermode_helper=disabled
+      - name: zfs
+      - name: spl
+  registries:
+    mirrors:
+      docker.io:
+        endpoints:
+          - https://mirror.gcr.io
+  files:
+    - content: |
+        [plugins]
+          [plugins."io.containerd.cri.v1.runtime"]
+            device_ownership_from_security_context = true
+      path: /etc/cri/conf.d/20-customization.part
+      op: create
+
+cluster:
+  apiServer:
+    extraArgs:
+      oidc-issuer-url: "https://keycloak.example.org/realms/cozy"
+      oidc-client-id: "kubernetes"
+      oidc-username-claim: "preferred_username"
+      oidc-groups-claim: "groups"
+  network:
+    cni:
+      name: none
+    dnsDomain: cozy.local
+    podSubnets:
+      - 10.244.0.0/16
+    serviceSubnets:
+      - 10.96.0.0/16
